@@ -1,0 +1,11 @@
+---
+const foo = "Hello World!";
+---
+
+<main>
+  <h1>{{ foo }}</h1>
+  <section> 
+    <h3>Static Content: Heading Three</h3>
+    <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
+  </section>
+</main>
