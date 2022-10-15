@@ -12,10 +12,11 @@ struct Args {
 }
 
 fn main() {
+    let mut regg: Regg = Regg::new();
     let args = Args::parse();
 
     match args.file {
-        Some(file) => Regg::run_file(&file[..]),
-        None => Regg::run_prompt(),
+        Some(file) => regg.run_file(&file[..]),
+        None => regg.run_prompt(),
     }
 }
