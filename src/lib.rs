@@ -40,17 +40,17 @@ impl Regg {
         }
     }
 
-    pub fn run<'a>(&mut self, source: &'a String) -> &'a String {
+    pub fn run<'a>(&mut self, source: &'a str) -> &'a str {
         println!("{}", source);
 
         return source;
     }
 
-    pub fn error(&mut self, line: u32, message: &str) {
+    pub fn error(&mut self, line: usize, message: &str) {
         self.report(line, "", message);
     }
 
-    pub fn report(&mut self, line: u32, place: &str, message: &str) {
+    pub fn report(&mut self, line: usize, place: &str, message: &str) {
         println!("[line {}] Error{}: {}", line, place, message);
 
         self.had_error = true;

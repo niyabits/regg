@@ -1,3 +1,7 @@
+mod scanner;
+mod token;
+mod token_type;
+
 use clap::Parser;
 use regg::Regg;
 
