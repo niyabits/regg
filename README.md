@@ -29,9 +29,9 @@ cargo run
 Please see `example/main.regg` <br />
 That's all I am planning with the proof of concept, in the future I might gradually expand to more things.
 
-[ ] Scanner (or Lexer or Tokenizer)
-[ ] Syntax Tree
-[ ] Parser
+- [ ] Scanner (or Lexer or Tokenizer)
+- [ ] Syntax Tree
+- [ ] Parser
 
 ## Inspirations
 
