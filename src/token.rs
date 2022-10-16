@@ -1,14 +1,20 @@
 use crate::token_type::TokenType;
 
+#[derive(Debug)]
 pub struct Token {
-    token_type: TokenType,
-    lexeme: String,
-    literal: String,
-    line: usize,
+    pub token_type: TokenType,
+    pub lexeme: String,
+    pub literal: Option<String>,
+    pub line: usize,
 }
 
 impl Token {
-    pub fn new(token_type: TokenType, lexeme: String, literal: String, line: usize) -> Self {
+    pub fn new(
+        token_type: TokenType,
+        lexeme: String,
+        literal: Option<String>,
+        line: usize,
+    ) -> Self {
         Self {
             token_type,
             lexeme,
@@ -18,6 +24,11 @@ impl Token {
     }
 
     pub fn to_string(&mut self) -> String {
-        return self.token_type.to_string() + " " + &self.lexeme[..] + " " + &self.literal[..];
+        match &self.literal {
+            Some(literal) => {
+                return self.token_type.to_string() + " " + &self.lexeme[..] + " " + &literal[..]
+            }
+            None => return self.token_type.to_string() + " " + &self.lexeme[..] + " " + "NULL",
+        }
     }
 }

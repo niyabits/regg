@@ -3,6 +3,12 @@ use std::{
     io::{self, Write},
 };
 
+use crate::scanner::Scanner;
+
+pub mod scanner;
+pub mod token;
+pub mod token_type;
+
 pub struct Regg {
     had_error: bool,
 }
@@ -41,9 +47,19 @@ impl Regg {
     }
 
     pub fn run<'a>(&mut self, source: &'a str) -> &'a str {
-        println!("{}", source);
+        let mut scanner = Scanner::new(source.to_string());
+        let tokens = scanner.scan_tokens();
+
+        tokens.iter().for_each(|token| println!("{:?}", token));
 
         return source;
+        /* Scanner scanner = new Scanner(source);
+
+        List<Token> tokens = scanner.scanTokens();
+
+        for (Token token : tokens) {
+            System.out.println(token);
+        } */
     }
 
     pub fn error(&mut self, line: usize, message: &str) {
