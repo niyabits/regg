@@ -47,14 +47,20 @@ impl Scanner {
                 if self.match_char('{') {
                     self.add_token(TokenType::StartExprToken, None);
                 }
-                self.advance();
             }
             '}' => {
                 if self.match_char('}') {
                     self.add_token(TokenType::EndExprToken, None);
                 }
-                self.advance();
             }
+            '-' => {
+                if self.match_char('-') {
+                    if self.match_char('-') {
+                        self.add_token(TokenType::FrontmatterFenceToken, None);
+                    }
+                }
+            }
+            '\n' => self.line += 1,
             _ => regg.error(self.line, "Unexpected character"),
         }
     }
@@ -76,6 +82,7 @@ impl Scanner {
     }
 
     fn advance(&mut self) -> char {
+        // TODO: fix this chaos
         let return_char = self
             .source
             .chars()
