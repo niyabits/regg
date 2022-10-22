@@ -59,7 +59,16 @@ impl Regg {
         self.report(line, "", message);
     }
 
-    pub fn report(&mut self, line: usize, place: &str, message: &str) {
+    fn report(&mut self, line: usize, place: &str, message: &str) {
+        // TODO: improve error handling
+        // https://github.com/zkat/miette
+        // http://www.unicode.org/charts/PDF/U2500.pdf
+        //    ╭
+        // 15 │ <h1> {{, heading.toUpperCase() }} </h1>
+        //    .        ┬
+        //    .        │
+        //    .        └─ unexpected character `,`
+
         println!("[line {}] Error{}: {}", line, place, message);
 
         self.had_error = true;
