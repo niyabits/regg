@@ -2,10 +2,6 @@ use std::fmt;
 
 #[derive(Debug)]
 pub enum TokenType {
-    StartExprToken,        // `{{`
-    EndExprToken,          // `}}`
-    FrontmatterFenceToken, // opening or closing `---`
-
     /* Literals */
     JsExpr,   // JavaScript Expression between `{{ ` and ` }}`
     JsBlock,  // JavaScript Code Block between `---` and `---`
