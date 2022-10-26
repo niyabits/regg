@@ -30,7 +30,7 @@ impl Scanner {
         self.tokens.push(Token {
             token_type: TokenType::EOF,
             lexeme: "".to_string(),
-            literal: Some("".to_string()),
+            literal: "".to_string(),
             line: self.line,
         });
 
@@ -41,23 +41,156 @@ impl Scanner {
         // Current character being scanned
         let c = self.advance();
         match c {
-            '{' => {
-                if self.match_char('{') {
-                    self.js_expr();
-                }
-            }
+            // Code Block
             '-' => {
                 if self.match_char('-') {
                     if self.match_char('-') {
-                        self.js_block();
+                        self.code_block(); // ---
                     }
                 }
             }
-            '\n' => self.line += 1,
-            _ => {
-                self.markup();
+            '{' => {
+                if self.match_char('{') {
+                    self.expression(); // {{ foo }}
+                }
             }
+            '<' => {
+                if self.match_char('/') {
+                    self.closing_tag(); // '</foo>'
+                } else {
+                    self.opening_tag_start();
+                }
+            }
+            '>' => {
+                self.add_token(TokenType::OpeningTagEnd, ">".to_string());
+            }
+            '/' => {
+                if self.match_char('>') {
+                    self.add_token(TokenType::SelfClosingTagEnd, "/>".to_string())
+                }
+            }
+            // ignore whitespaces
+            ' ' => {}
+            '\r' => {}
+            '\t' => {}
+            '\n' => self.line += 1,
+            _ => self.text_token(),
         }
+    }
+
+    fn code_block(&mut self) {
+        // consume current character until frontmatter fence (---) is reached
+        while !self.is_at_end()
+            && self.peek().unwrap() != '-'
+            && self.peek_next().unwrap() != '-'
+            && self.peek_third().unwrap() != '-'
+        {
+            if self.peek().unwrap() == '\n' {
+                self.line += 1;
+            }
+
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            let mut regg = Regg::new();
+            regg.error(self.line, "Unterminated frontmatter fence token `---`");
+        }
+
+        self.advance(); // consumes white space
+        self.advance(); // consume `---`
+        self.advance();
+        self.advance();
+        self.advance(); // consumes white space
+
+        // Get Code Block, trim `---` from start and end
+        let value = &self.source[self.start + 3..self.current - 3];
+        self.add_token(TokenType::CodeBlock, value.to_string());
+    }
+
+    fn opening_tag_start(&mut self) {
+        // consume characters until space is reached
+        while !self.is_at_end() && self.peek().unwrap() != ' ' {
+            if self.peek().unwrap() == '\n' {
+                self.line += 1;
+            }
+            if self.peek().unwrap() == '>' {
+                break;
+            }
+            self.advance();
+        }
+
+        // Get the HTML Tag's Name
+        let value = &self.source[self.start + 1..self.current];
+        self.add_token(TokenType::OpeningTagStart, value.to_string());
+    }
+
+    fn closing_tag(&mut self) {
+        // consume characters until space is reached
+        while !self.is_at_end() && self.peek().unwrap() != '>' {
+            if self.peek().unwrap() == '\n' {
+                self.line += 1;
+            }
+
+            self.advance();
+        }
+
+        self.advance();
+
+        let value = &self.source[self.start..self.current];
+        self.add_token(TokenType::ClosingTag, value.to_string());
+    }
+
+    fn text_token(&mut self) {
+        // consume characters until '>' is reached (attribute) or beginning of an expression `{{`
+        while !self.is_at_end() {
+            if self.peek().unwrap() == '>'
+                || self.peek().unwrap() == '<'
+                || (self.peek().unwrap() == '/' && self.peek_next().unwrap() == '>')
+            {
+                break; // OpeningTagStart || OpeningTagEnd || SelfClosingTagEnd
+            }
+
+            if self.peek().unwrap() == '{' && self.peek_next().unwrap() == '{' {
+                break; // Break if an expression token '{{' is reached
+            }
+
+            if self.peek().unwrap() == '\n' {
+                self.line += 1;
+            }
+
+            self.advance();
+        }
+
+        // Get the HTML Tag's Name
+        let value = &self.source[self.start..self.current];
+        self.add_token(TokenType::TextToken, value.to_string());
+    }
+
+    fn expression(&mut self) {
+        // TODO: refactor, this is not a good way to handle match enums
+        // consume all the characters before `}}`
+        while !self.is_at_end() && self.peek().unwrap() != '}' && self.peek_next().unwrap() != '}' {
+            if self.peek().unwrap() == '\n' {
+                self.line += 1;
+            }
+
+            self.advance();
+        }
+
+        if self.is_at_end() {
+            let mut regg = Regg::new();
+            regg.error(self.line, "Unterminated double curly braces `}}`");
+        }
+
+        // consumes `}}`
+        self.advance(); // consumes whitespace
+        self.advance();
+        self.advance();
+
+        // Get the JavaScript Expression, trim the `{{` and `}}`
+        let value = &self.source[self.start + 2..self.current - 2];
+        self.add_token(TokenType::Expression, value.to_string());
     }
 
     fn peek(&mut self) -> Option<char> {
@@ -127,7 +260,7 @@ impl Scanner {
         }
     }
 
-    fn add_token(&mut self, token_type: TokenType, literal: Option<String>) {
+    fn add_token(&mut self, token_type: TokenType, literal: String) {
         let text = &self.source[self.start..self.current];
 
         self.tokens.push(Token {
@@ -136,86 +269,6 @@ impl Scanner {
             literal,
             line: self.line,
         })
-    }
-
-    fn js_expr(&mut self) {
-        // TODO: refactor, this is not a good way to handle match enums
-        // consume all the characters before `}}`
-        while !self.is_at_end() && self.peek().unwrap() != '}' && self.peek_next().unwrap() != '}' {
-            if self.peek().unwrap() == '\n' {
-                self.line += 1;
-            }
-
-            self.advance();
-        }
-
-        if self.is_at_end() {
-            let mut regg = Regg::new();
-            regg.error(self.line, "Unterminated double curly braces `}}`");
-        }
-
-        // consumes `}}`
-        self.advance(); // consumes a whitespace, figure this out
-        self.advance();
-        self.advance();
-
-        // Get the JavaScript Expression, trim the `{{` and `}}`
-        let value = &self.source[self.start + 2..self.current - 2];
-        self.add_token(TokenType::JsExpr, Some(value.to_string()));
-    }
-
-    fn js_block(&mut self) {
-        // TODO: refactor, this is not a good way to handle match enums
-        // consume all the characters before `}}`
-        while !self.is_at_end()
-            && self.peek().unwrap() != '-'
-            && self.peek_next().unwrap() != '-'
-            && self.peek_third().unwrap() != '-'
-        {
-            if self.peek().unwrap() == '\n' {
-                self.line += 1;
-            }
-
-            self.advance();
-        }
-
-        if self.is_at_end() {
-            let mut regg = Regg::new();
-            regg.error(self.line, "Unterminated frontmatter fence token `---`");
-        }
-
-        self.advance(); // consumes white space
-
-        // consume `---`
-        self.advance();
-        self.advance();
-        self.advance();
-
-        self.advance(); // consumes white space
-
-        // Get the JavaScript Expression, trim the `{{` and `}}`
-        let value = &self.source[self.start + 3..self.current - 3];
-        self.add_token(TokenType::JsBlock, Some(value.to_string()));
-    }
-
-    fn markup(&mut self) {
-        if self.current + 2 <= self.source.len().try_into().unwrap() {
-            while !self.is_at_end() {
-                if self.peek().unwrap() == '\n' {
-                    self.line += 1;
-                }
-
-                self.advance();
-
-                // Break if JavaScript Expression syntax `{{` is encountered
-                if self.peek().unwrap() == '{' && self.peek_next().unwrap() == '{' {
-                    break;
-                }
-            }
-        }
-
-        let value = &self.source[self.start..self.current];
-        self.add_token(TokenType::Markup, Some(value.to_string()));
     }
 
     fn get_nth_char(&mut self, index: usize) -> Option<char> {
