@@ -45,18 +45,18 @@ impl Scanner {
             '-' => {
                 if self.match_char('-') {
                     if self.match_char('-') {
-                        self.code_block();
+                        self.code_block(); // ---
                     }
                 }
             }
             '{' => {
                 if self.match_char('{') {
-                    self.expression();
+                    self.expression(); // {{ foo }}
                 }
             }
             '<' => {
                 if self.match_char('/') {
-                    self.closing_tag();
+                    self.closing_tag(); // '</foo>'
                 } else {
                     self.opening_tag_start();
                 }
@@ -69,6 +69,10 @@ impl Scanner {
                     self.add_token(TokenType::SelfClosingTagEnd, "/>".to_string())
                 }
             }
+            // ignore whitespaces
+            ' ' => {}
+            '\r' => {}
+            '\t' => {}
             '\n' => self.line += 1,
             _ => self.text_token(),
         }
