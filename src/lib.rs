@@ -64,10 +64,10 @@ impl Regg {
         // https://github.com/zkat/miette
         // http://www.unicode.org/charts/PDF/U2500.pdf
         //    ╭
-        // 15 │ <h1> {{, heading.toUpperCase() }} </h1>
-        //    .        ┬
-        //    .        │
-        //    .        └─ unexpected character `,`
+        // 15 │ <h1> {, heading.toUpperCase() } </h1>
+        //    .       ┬
+        //    .       │
+        //    .       └─ unexpected character `,`
 
         println!("[line {}] Error{}: {}", line, place, message);
 

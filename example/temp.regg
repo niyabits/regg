@@ -1,4 +1,10 @@
 ---
-const foo = "Hello World!";
+const navLinks = ["home", "about", "blog", "contact"];
 ---
-{{ foo }}
+<nav>
+  {
+    navLinks.forEach((link) => (`
+      <span>{link}</span>
+    `), foobar)
+  }
+</nav>

@@ -16,8 +16,10 @@ pub enum TokenType {
     SelfClosingTagEnd, //  />`
 
     /* Regg Specific */
-    Expression, // Code Expression: anything between `{{` and `}}`
-    CodeBlock,  // Code Block: anything between two `---`
+    Expression,    // Code Expression: anything between `{` and `}`
+    CodeBlock,     // Code Block: anything between two `---`
+    HTMLExprStart, // (`
+    HTMLExprEnd,   // `)
 
     EOF,
 }
@@ -35,7 +37,7 @@ impl fmt::Display for TokenType {
 //
 // The reason I don't do this is, I see code expressions and code blocks similar to string literals in Lox,
 // in the Lox TokenType Bob doesn't tokenize the quotes,
-// I don't see any benefits to tokenizing `{{` and `---` seperately,
+// I don't see any benefits to tokenizing `{` and `---` seperately,
 // if such requirement comes up in the future I am open to having those tokens seperate
 // Until then I'd like to enjoy having less Tokens to deal with.
 
@@ -44,9 +46,9 @@ impl fmt::Display for TokenType {
 // HTMLElement ->  OpeningTagStart TextNode* OpeningTagEnd (HTMLElement* | TextNode) (ClosingTag | SelfClosingTag)
 // TextNode -> Expression* TextToken* Expression*
 //
-// CodeBlock        -> --- bar ---      ; bar = \*\
-// OpeningTagStart     -> <foo             ; foo = \[A-Za-z]\
-// OpeningTagEnd       -> >
-// ClosingTag         -> </foo>           ; foo = \[A-Za-z]\
-// SelfClosingTag   -> />
-// Expression       -> {{ bar }}        ; bar = \*\
+// CodeBlock            -> --- bar ---      ; bar = \*\
+// OpeningTagStart      -> <foo             ; foo = \[A-Za-z]\
+// OpeningTagEnd        -> >
+// ClosingTag           -> </foo>           ; foo = \[A-Za-z]\
+// SelfClosingTag       -> />
+// Expression           -> { bar }        ; bar = \*\

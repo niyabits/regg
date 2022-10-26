@@ -30,7 +30,7 @@ impl Scanner {
         self.tokens.push(Token {
             token_type: TokenType::EOF,
             lexeme: "".to_string(),
-            literal: "".to_string(),
+            literal: None,
             line: self.line,
         });
 
@@ -50,9 +50,7 @@ impl Scanner {
                 }
             }
             '{' => {
-                if self.match_char('{') {
-                    self.expression(); // {{ foo }}
-                }
+                self.expression(); // { foo }
             }
             '<' => {
                 if self.match_char('/') {
@@ -62,11 +60,23 @@ impl Scanner {
                 }
             }
             '>' => {
-                self.add_token(TokenType::OpeningTagEnd, ">".to_string());
+                self.add_token(TokenType::OpeningTagEnd, None);
             }
             '/' => {
                 if self.match_char('>') {
-                    self.add_token(TokenType::SelfClosingTagEnd, "/>".to_string())
+                    self.add_token(TokenType::SelfClosingTagEnd, None)
+                }
+            }
+            '(' => {
+                if self.match_char('`') {
+                    self.add_token(TokenType::HTMLExprStart, None)
+                }
+            }
+            '`' => {
+                if self.match_char(')') {
+                    self.add_token(TokenType::HTMLExprEnd, None);
+                    self.start += 2;
+                    self.expression();
                 }
             }
             // ignore whitespaces
@@ -105,7 +115,7 @@ impl Scanner {
 
         // Get Code Block, trim `---` from start and end
         let value = &self.source[self.start + 3..self.current - 3];
-        self.add_token(TokenType::CodeBlock, value.to_string());
+        self.add_token(TokenType::CodeBlock, Some(value.to_string()));
     }
 
     fn opening_tag_start(&mut self) {
@@ -122,7 +132,7 @@ impl Scanner {
 
         // Get the HTML Tag's Name
         let value = &self.source[self.start + 1..self.current];
-        self.add_token(TokenType::OpeningTagStart, value.to_string());
+        self.add_token(TokenType::OpeningTagStart, Some(value.to_string()));
     }
 
     fn closing_tag(&mut self) {
@@ -137,12 +147,12 @@ impl Scanner {
 
         self.advance();
 
-        let value = &self.source[self.start..self.current];
-        self.add_token(TokenType::ClosingTag, value.to_string());
+        let value = &self.source[self.start + 2..self.current - 1];
+        self.add_token(TokenType::ClosingTag, Some(value.to_string()));
     }
 
     fn text_token(&mut self) {
-        // consume characters until '>' is reached (attribute) or beginning of an expression `{{`
+        // consume characters until '>' (attribute end) or beginning of an HTML element `<`
         while !self.is_at_end() {
             if self.peek().unwrap() == '>'
                 || self.peek().unwrap() == '<'
@@ -151,8 +161,8 @@ impl Scanner {
                 break; // OpeningTagStart || OpeningTagEnd || SelfClosingTagEnd
             }
 
-            if self.peek().unwrap() == '{' && self.peek_next().unwrap() == '{' {
-                break; // Break if an expression token '{{' is reached
+            if self.peek().unwrap() == '{' {
+                break; // Break if an expression token '{' is reached
             }
 
             if self.peek().unwrap() == '\n' {
@@ -164,33 +174,45 @@ impl Scanner {
 
         // Get the HTML Tag's Name
         let value = &self.source[self.start..self.current];
-        self.add_token(TokenType::TextToken, value.to_string());
+        self.add_token(TokenType::TextToken, Some(value.to_string()));
     }
 
     fn expression(&mut self) {
-        // TODO: refactor, this is not a good way to handle match enums
-        // consume all the characters before `}}`
-        while !self.is_at_end() && self.peek().unwrap() != '}' && self.peek_next().unwrap() != '}' {
+        // consume all the characters before `}`
+        while !self.is_at_end() {
             if self.peek().unwrap() == '\n' {
                 self.line += 1;
             }
 
-            self.advance();
+            if self.peek().unwrap() == '(' && self.peek_next().unwrap() == '`' {
+                break; // Break if an HTML Expr is upcoming
+            }
+
+            if self.advance() == '}' {
+                break; // Break if the current scanned character is '}'
+            }
         }
 
         if self.is_at_end() {
             let mut regg = Regg::new();
-            regg.error(self.line, "Unterminated double curly braces `}}`");
+            regg.error(self.line, "Unterminated curly brace `}`");
         }
 
-        // consumes `}}`
-        self.advance(); // consumes whitespace
-        self.advance();
-        self.advance();
+        // if `}` present
+        if self.peek().unwrap() == '}' {
+            self.advance(); // consumes whitespace
+            self.advance(); // consume `}`
+        }
 
-        // Get the JavaScript Expression, trim the `{{` and `}}`
-        let value = &self.source[self.start + 2..self.current - 2];
-        self.add_token(TokenType::Expression, value.to_string());
+        if self.get_nth_char(self.start - 1).unwrap() == ')' {
+            // Expression is started following an HTMLExprEnd
+            let value = &self.source[self.start..self.current - 1];
+            self.add_token(TokenType::Expression, Some(value.to_string()));
+        } else {
+            // Get the JavaScript Expression, trim the `{` and `}`
+            let value = &self.source[self.start + 1..self.current - 1];
+            self.add_token(TokenType::Expression, Some(value.to_string()));
+        }
     }
 
     fn peek(&mut self) -> Option<char> {
@@ -260,7 +282,7 @@ impl Scanner {
         }
     }
 
-    fn add_token(&mut self, token_type: TokenType, literal: String) {
+    fn add_token(&mut self, token_type: TokenType, literal: Option<String>) {
         let text = &self.source[self.start..self.current];
 
         self.tokens.push(Token {

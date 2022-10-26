@@ -4,10 +4,10 @@ const name = "John Doe"
 ---
 
 <main>
-  <h1>{{ greeting }}</h1>
+  <h1>{ greeting }</h1>
   <section> 
     <h3>Static Content: Heading Three</h3>
     <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
-    <p>{{ name }}</p>
+    <p>{ name }</p>
   </section>
 </main>
