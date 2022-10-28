@@ -1,13 +1,17 @@
 ---
 const greeting = "Hello World!";
-const name = "John Doe"
+const navLinks = ['home', 'about', 'contact'];
 ---
 
 <main>
   <h1>{ greeting }</h1>
   <section> 
-    <h3>Static Content: Heading Three</h3>
-    <p>Lorem ipsum dolor sit amet, qui minim labore adipisicing minim sint cillum sint consectetur cupidatat.</p>
-    <p>{ name }</p>
+    <h3>Heading Three</h3>
+    <p>Lorem ipsum dolor sit amet.</p>
+    {
+      navLinks.map(navLink => {
+          return (`<nav>{navLink}</nav>`);
+        })
+    }
   </section>
 </main>

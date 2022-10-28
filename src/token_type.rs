@@ -44,11 +44,14 @@ impl fmt::Display for TokenType {
 /* Regg's Context Free Grammar */
 // Frontmatter -> CodeBlock
 // HTMLElement ->  OpeningTagStart TextNode* OpeningTagEnd (HTMLElement* | TextNode) (ClosingTag | SelfClosingTag)
-// TextNode -> Expression* TextToken* Expression*
+// TextNode -> Expression* (HTMLExprStart HTMLElement* HTMLExprEnd)* Expression*
+//
+// OpeningTagStart      -> <foo             ; foo = \[A-Za-z]\
+// OpeningTagEnd        -> >                ;
+// SelfClosingTag       -> />               ;
+// ClosingTag           -> </foo>           ; foo = \[A-Za-z]\
 //
 // CodeBlock            -> --- bar ---      ; bar = \*\
-// OpeningTagStart      -> <foo             ; foo = \[A-Za-z]\
-// OpeningTagEnd        -> >
-// ClosingTag           -> </foo>           ; foo = \[A-Za-z]\
-// SelfClosingTag       -> />
-// Expression           -> { bar }        ; bar = \*\
+// Expression           -> { bar }          ; bar = \*\
+// HTMLExprStart        -> (`               ;
+// HTMLExprEnd          -> `)               ;

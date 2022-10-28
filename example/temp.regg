@@ -1,10 +1,10 @@
 ---
 const navLinks = ["home", "about", "blog", "contact"];
 ---
-<nav>
+<nav class="top">
   {
     navLinks.forEach((link) => (`
-      <span>{link}</span>
+      <span id="link-span">{link}</span>
     `), foobar)
   }
 </nav>
