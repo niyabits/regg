@@ -41,10 +41,11 @@ cargo run
 
 - [ ] Scanner (or Lexer or Tokenizer)
   - [x] Support Markup Tags
-  - [x] Support Markup inside expressions  `` (` `` and `` `) ``
-  - [x] Support Expressions 
+  - [x] Support Markup inside expressions `` (` `` and `` `) ``
+  - [x] Support Expressions
   - [x] Support Code Blocks — code between `---` and `---` at the start
   - [ ] Support escaped expression syntax — `\{` and `\}`
+  - [ ] Add Tests
 - [ ] Parser
 - [ ] Traverser
 - [ ] Transformer
@@ -52,6 +53,7 @@ cargo run
 - [ ] Compiler
 
 ### Miscellaneous
+
 - [x] Devise a Context Free Grammer
   - [ ] Port to Backus-Naur Form [Optional]
 - [x] CLI with Clap-rs
@@ -62,26 +64,32 @@ cargo run
   - [ ] NAPI-rs integration
 
 ## Syntax Guide
+
 ### Frontmatter
+
 ```astro
 ---
   const greeting = 'hello world!';
   const navItems = ['home', 'about', 'contact']
 ---
 ```
+
 The code inside the Frontmatter Fence Tokens (`---`) is called a Codeblock. <br />
 This is different from an expression that goes inside `{` and `}` as it does not need to be checked if it returns a string or number.
 
 ### Expressions
+
 ```astro
 <main>
   <h1>{greeting}</h1>
 </main>
 ```
+
 Stuff between `{` and `}` is a JavaScript expressions <br />
 The expressions should get evaluated into a string or number or markup.
 
 ### Markup Expressions
+
 ```astro
 <main>
   {
@@ -89,14 +97,16 @@ The expressions should get evaluated into a string or number or markup.
       return (`<nav>{navItem}</nav>`)
     })
   }
-</main> 
+</main>
 ```
+
 A JavaScript Expression can return a Markup Expression. <br />
 A Markup Expression tells Regg that this markup contains JavaScript expressions that need to be evaluated. <br />
 The syntax is adding the Markup Expression between `` `( `` and `` `) ``, this is valid JavaScript unlike JSX. <br />
 Although the expression part is Regg specific syntax that is evaluated by the templating engine at build time.
 
 ## Context Free Grammar
+
 ```
 Frontmatter -> CodeBlock
 HTMLElement -> OpeningTagStart TextNode* OpeningTagEnd (HTMLElement* | TextNode) (ClosingTag | SelfClosingTag)
